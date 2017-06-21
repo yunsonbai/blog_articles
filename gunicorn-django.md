@@ -2,12 +2,12 @@
 title: 如何提高django的并发能力
 date: 2017-06-15 18:43:54
 tags:
-	- 提高django的并发能力
-	- gthread
+    - 提高django的并发能力
+    - gthread
     - gevent
-	- gunicorn+django
-	- gunicorn+gthread+django
-	- gunicorn+gevent+django
+    - gunicorn+django
+    - gunicorn+gthread+django
+    - gunicorn+gevent+django
 categories: python
 ---
 [原文连接](https://yunsonbai.top/2017/06/15/gunicorn-django/)
@@ -23,20 +23,20 @@ categories: python
 ## Overview
 
 * 环境说明：
-	* python: 3.5
-	* django: 1.8.2
-	* gunicorn: 19.7.1
+    * python: 3.5
+    * django: 1.8.2
+    * gunicorn: 19.7.1
 * 系统：
-	* 服务器: centos 4核
-	* 压测机器: centos 4核
+    * 服务器: centos 4核
+    * 压测机器: centos 4核
 * 压测环境
-	* siege
-	* 4核centos测试机
+    * siege
+    * 4核centos测试机
 * 为什么用django
-	* 开发效率高
-	* 好上手
+    * 开发效率高
+    * 好上手
 * 关于gunicorn
-	* Gunicorn 'Green Unicorn' is a Python WSGI HTTP Server for UNIX.It's a pre-fork worker model. The Gunicorn server is broadly compatible with various web frameworks, simply implemented, light on server resources, and fairly speedy.(这是官方给出的回答)
+    * Gunicorn 'Green Unicorn' is a Python WSGI HTTP Server for UNIX.It's a pre-fork worker model. The Gunicorn server is broadly compatible with various web frameworks, simply implemented, light on server resources, and fairly speedy.(这是官方给出的回答)
 
 
 ## 压测方式及命令
@@ -54,42 +54,42 @@ categories: python
 ```python
 # 这里我们用mysql，其他配置都是默认
 DATABASES = {
-	'default': {
-		'ENGINE': 'django.db.backends.mysql',
-		'NAME': 'ce',
-		'USER': 'root',
-		'PASSWORD': '',
-		'HOST': '192.168.96.95',
-		'PORT': '3306',
-		# 'CONN_MAX_AGE': 600,
-	}
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'ce',
+        'USER': 'root',
+        'PASSWORD': '',
+        'HOST': '192.168.96.95',
+        'PORT': '3306',
+        # 'CONN_MAX_AGE': 600,
+    }
 }
 ```
 
 ### models部分
 ```python
 class Test(models.Model):
-	url = models.CharField(max_length=228, blank=True, null=True)
-	img_url = models.CharField(max_length=228, blank=True, null=True)
-	title = models.CharField(max_length=228, blank=True, null=True)
-	content = models.CharField(max_length=228, blank=True, null=True)
+    url = models.CharField(max_length=228, blank=True, null=True)
+    img_url = models.CharField(max_length=228, blank=True, null=True)
+    title = models.CharField(max_length=228, blank=True, null=True)
+    content = models.CharField(max_length=228, blank=True, null=True)
 
-	class Meta:
-		db_table = 'test'
-		verbose_name = "test表"
+    class Meta:
+        db_table = 'test'
+        verbose_name = "test表"
 
-	def __unicode__(self):
-		return self.id
+    def __unicode__(self):
+        return self.id
 ```
 
 ### views部分
 ```python
 class Test(APIView):
 
-	def post(self, requsts):
-		Test.objects.create(
-			**{'url': str(1000000 * time.time())})
-		return Response({"status": 200})
+    def post(self, requsts):
+        Test.objects.create(
+            **{'url': str(1000000 * time.time())})
+        return Response({"status": 200})
 ```
 
 ## 开始压测
@@ -109,36 +109,36 @@ MySQL [ce]> select id from test order by id desc limit 2;
 ```python
 Lifting the server siege...      done.
 
-Transactions:		       24041 hits
-Availability:		       99.93 %
-Elapsed time:		       99.60 secs
-Data transferred:	        0.32 MB
-Response time:		        1.03 secs
-Transaction rate:	      241.38 trans/sec  # 并发量只有241
-Throughput:		        0.00 MB/sec
-Concurrency:		      248.94
+Transactions:               24041 hits
+Availability:               99.93 %
+Elapsed time:               99.60 secs
+Data transferred:            0.32 MB
+Response time:                1.03 secs
+Transaction rate:          241.38 trans/sec  # 并发量只有241
+Throughput:                0.00 MB/sec
+Concurrency:              248.94
 Successful transactions:       24041
-Failed transactions:	          16
-Longest transaction:	       32.55
-Shortest transaction:	        0.05
+Failed transactions:              16
+Longest transaction:           32.55
+Shortest transaction:            0.05
 ```
 
 ### gunicorn+gevent(4个worker)
 ```python
 Lifting the server siege...      done.
 
-Transactions:		       23056 hits
-Availability:		      100.00 %
-Elapsed time:		       99.49 secs
-Data transferred:	        0.31 MB
-Response time:		        1.09 secs
-Transaction rate:	      231.74 trans/sec # 并发量只有231
-Throughput:		        0.00 MB/sec
-Concurrency:		      252.95
+Transactions:               23056 hits
+Availability:              100.00 %
+Elapsed time:               99.49 secs
+Data transferred:            0.31 MB
+Response time:                1.09 secs
+Transaction rate:          231.74 trans/sec # 并发量只有231
+Throughput:                0.00 MB/sec
+Concurrency:              252.95
 Successful transactions:       23056
-Failed transactions:	           0
-Longest transaction:	        8.21
-Shortest transaction:	        0.01
+Failed transactions:               0
+Longest transaction:            8.21
+Shortest transaction:            0.01
 ```
 
 ### gunicorn+gthread(4个worker, --threads=50)
@@ -155,18 +155,18 @@ done.
 siege aborted due to excessive socket failure; you
 can change the failure threshold in $HOME/.siegerc
 
-Transactions:		       28231 hits
-Availability:		       95.67 %
-Elapsed time:		       30.71 secs
-Data transferred:	        0.41 MB
-Response time:		        0.27 secs
-Transaction rate:	      919.28 trans/sec  # 提高了不少吧，能不能在提高？
-Throughput:		        0.01 MB/sec
-Concurrency:		      251.06
+Transactions:               28231 hits
+Availability:               95.67 %
+Elapsed time:               30.71 secs
+Data transferred:            0.41 MB
+Response time:                0.27 secs
+Transaction rate:          919.28 trans/sec  # 提高了不少吧，能不能在提高？
+Throughput:                0.01 MB/sec
+Concurrency:              251.06
 Successful transactions:       28231
-Failed transactions:	        1278        # 但是失败的有些多
-Longest transaction:	        8.06
-Shortest transaction:	        0.01
+Failed transactions:            1278        # 但是失败的有些多
+Longest transaction:            8.06
+Shortest transaction:            0.01
 ```
 
 ### gunicorn+gthread+CONN_MAX_AGE(4个worker, --threads=50)
@@ -176,18 +176,18 @@ CONN_MAX_AGE: 复用数据库链接
 
 Lifting the server siege...      done.
 
-Transactions:		      110289 hits
-Availability:		       99.62 %
-Elapsed time:		       99.65 secs
-Data transferred:	        1.47 MB
-Response time:		        0.23 secs
-Transaction rate:	     1106.76 trans/sec  # 这次又提升了不少啊
-Throughput:		        0.01 MB/sec
-Concurrency:		      253.84
+Transactions:              110289 hits
+Availability:               99.62 %
+Elapsed time:               99.65 secs
+Data transferred:            1.47 MB
+Response time:                0.23 secs
+Transaction rate:         1106.76 trans/sec  # 这次又提升了不少啊
+Throughput:                0.01 MB/sec
+Concurrency:              253.84
 Successful transactions:      110289
-Failed transactions:	         422
-Longest transaction:	        3.85
-Shortest transaction:	        0.01
+Failed transactions:             422
+Longest transaction:            3.85
+Shortest transaction:            0.01
 ```
 
 ### 能不能gunicorn+gevent+CONN_MAX_AGE(4个worker)
